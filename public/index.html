@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Find the exact gaps in your understanding using the Feynman Technique — powered by AI." />
+  <title>Feynman Gap Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="mesh-bg" aria-hidden="true"></div>
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
+  <div class="app">
+    <header class="hero">
+      <div class="hero-badge">Feynman Technique × AI</div>
+      <h1>Feynman Gap Finder</h1>
+      <p class="tagline">Explain it simply. AI finds exactly where your understanding breaks.</p>
+      <p class="feynman-quote">"If you can't explain it simply, you don't understand it well enough." — Feynman Technique</p>
+      <div class="hero-steps">
+        <span><strong>1</strong> Explain</span>
+        <span class="step-arrow">→</span>
+        <span><strong>2</strong> Get pinpointed "but why?"</span>
+        <span class="step-arrow">→</span>
+        <span><strong>3</strong> Gap map + micro-lessons</span>
+      </div>
+    </header>
+
+    <section id="setup-panel" class="panel glass">
+      <div class="input-tabs">
+        <button type="button" class="tab active" data-tab="explain">Explain a topic</button>
+        <button type="button" class="tab" data-tab="notes">From my notes</button>
+      </div>
+
+      <div id="tab-explain" class="tab-panel">
+        <label for="topic">Topic</label>
+        <input id="topic" type="text" placeholder="What are you trying to explain?" autocomplete="off" />
+
+        <div class="field-header">
+          <label for="explanation">Your explanation <span class="hint">(2–4 sentences, your own words)</span></label>
+          <button id="voice-explain-btn" class="btn icon" type="button" title="Speak your explanation" aria-label="Voice input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+        </div>
+        <textarea id="explanation" rows="5" placeholder="Explain the topic as if teaching a curious friend…"></textarea>
+      </div>
+
+      <div id="tab-notes" class="tab-panel hidden">
+        <label for="notes-input">Paste or upload study notes</label>
+        <textarea id="notes-input" rows="6" placeholder="Paste a paragraph from your textbook, slides, or lecture notes…"></textarea>
+        <div class="notes-actions">
+          <label class="btn ghost file-btn">
+            Upload .txt
+            <input id="notes-file" type="file" accept=".txt,text/plain" hidden />
+          </label>
+          <button id="extract-btn" class="btn primary" type="button">Extract topic</button>
+        </div>
+        <div id="extract-result" class="extract-result hidden">
+          <span class="extract-label">We'll test you on:</span>
+          <strong id="extract-topic"></strong>
+          <p id="extract-summary" class="extract-summary"></p>
+        </div>
+        <label for="notes-explanation">Now explain it in your own words</label>
+        <textarea id="notes-explanation" class="recall-field" rows="4" placeholder="Without looking at the notes — explain what you understood…"></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="start-btn" class="btn primary glow">Start gap hunt</button>
+        <button id="demo-btn" class="btn ghost" type="button">Load demo</button>
+      </div>
+    </section>
+
+    <section id="chat-panel" class="panel glass hidden">
+      <div class="chat-header">
+        <div class="topic-pill" id="active-topic"></div>
+        <div class="live-score" id="live-score">
+          <div class="live-score-label">
+            <span>Understanding</span>
+            <strong id="live-score-value">—</strong>
+          </div>
+          <div class="live-score-bar">
+            <div id="live-score-fill" class="live-score-fill"></div>
+            <div id="live-gap-zone" class="live-gap-zone"></div>
+          </div>
+        </div>
+        <div id="round-stepper" class="round-stepper"></div>
+      </div>
+      <div id="routing-badge" class="routing-badge hidden"></div>
+      <div id="heatmap-panel" class="heatmap-panel hidden"></div>
+      <div id="journey-live" class="journey-wrap hidden"></div>
+      <div id="chat-thread" class="chat-thread" aria-live="polite"></div>
+
+      <div id="answer-area" class="answer-area">
+        <div class="field-header">
+          <label for="answer">Your answer</label>
+          <div class="answer-tools">
+            <button id="tts-toggle" class="btn icon" type="button" title="Voice readout on" aria-label="Toggle AI voice">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+            <button id="voice-answer-btn" class="btn icon" type="button" title="Speak your answer" aria-label="Voice answer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <textarea id="answer" rows="3" placeholder="Answer the question…"></textarea>
+        <button id="submit-answer-btn" class="btn primary">Submit answer</button>
+      </div>
+    </section>
+
+    <section id="gap-panel" class="panel glass hidden">
+      <div class="results-header">
+        <div class="score-card">
+          <svg class="score-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="score-ring-bg" cx="60" cy="60" r="52" />
+            <circle class="score-ring-progress" cx="60" cy="60" r="52" />
+          </svg>
+          <div class="score-inner">
+            <span id="score-value" class="score-value">—</span>
+            <span id="score-grade" class="score-grade">—</span>
+          </div>
+        </div>
+        <div class="score-meta">
+          <h2>Mastery Report</h2>
+          <p id="score-verdict" class="verdict"></p>
+          <div id="score-stats" class="score-stats"></div>
+        </div>
+      </div>
+
+      <div id="expert-card" class="insight-card hidden">
+        <span class="insight-label">Expert snapshot</span>
+        <p id="expert-text"></p>
+      </div>
+      <div id="coach-card" class="insight-card coach hidden">
+        <span class="insight-label">Coach note</span>
+        <p id="coach-text"></p>
+      </div>
+
+      <div id="compare-card" class="compare-card hidden">
+        <h3 class="section-title">You vs Expert</h3>
+        <div class="compare-grid">
+          <div class="compare-col you">
+            <span class="compare-label">Your explanation</span>
+            <p id="compare-yours"></p>
+          </div>
+          <div class="compare-col expert">
+            <span class="compare-label">Expert snapshot</span>
+            <p id="compare-expert"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="journey-final" class="journey-wrap"></div>
+
+      <h3 class="section-title">Knowledge Graph</h3>
+      <div id="gap-graph" class="gap-graph-wrap"></div>
+
+      <h3 class="section-title">Gap Map</h3>
+      <p class="subtitle">Green = solid · Amber = shaky · Micro-lessons patch the gaps.</p>
+      <div id="gap-map" class="gap-map"></div>
+
+      <div id="flashcards-panel" class="flashcards-panel hidden">
+        <h3 class="section-title">Gap Flashcards</h3>
+        <p class="subtitle">Tap to flip — micro-lesson + analogy on the back.</p>
+        <div id="flashcards-grid"></div>
+      </div>
+
+      <div id="prove-it-panel" class="prove-it-panel hidden">
+        <h3 class="section-title">Prove-It Challenge</h3>
+        <p id="prove-it-prompt" class="subtitle"></p>
+        <textarea id="prove-it-input" rows="3" placeholder="Re-explain this concept in your own words…"></textarea>
+        <button id="prove-it-btn" class="btn primary">Submit prove-it</button>
+        <div id="prove-it-result" class="prove-it-result hidden"></div>
+      </div>
+
+      <div class="results-actions">
+        <button id="share-link-btn" class="btn ghost">Share link</button>
+        <button id="copy-report-btn" class="btn ghost">Copy report</button>
+        <button id="restart-btn" class="btn ghost">Try another topic</button>
+      </div>
+    </section>
+
+    <div id="status" class="status hidden" role="status"></div>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

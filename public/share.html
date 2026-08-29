@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gap Report — Feynman Gap Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Syne:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .share-page { max-width: 640px; margin: 0 auto; padding: 2rem 1rem; }
+    .share-page h1 { font-family: Syne, sans-serif; font-size: 1.5rem; }
+    .share-loading { color: var(--muted); text-align: center; padding: 4rem 0; }
+  </style>
+</head>
+<body>
+  <div class="mesh-bg"></div>
+  <div class="share-page">
+    <h1>Feynman Gap Report</h1>
+    <div id="content" class="share-loading">Loading report…</div>
+  </div>
+  <script type="module">
+    const id = new URLSearchParams(location.search).get('id');
+    const el = document.getElementById('content');
+    if (!id) { el.textContent = 'Missing session id.'; throw 0; }
+
+    const res = await fetch(`/api/session/${id}`);
+    if (!res.ok) { el.textContent = 'Report expired or not found.'; throw 0; }
+    const { session: s } = await res.json();
+
+    el.className = 'panel glass';
+    el.innerHTML = `
+      <h2 style="margin:0 0 .5rem;font-family:Syne,sans-serif">${esc(s.topic)}</h2>
+      <p><strong>${s.mastery?.score ?? '—'}%</strong> mastery · grade ${s.mastery?.grade ?? '—'}</p>
+      <p style="color:var(--muted)">${esc(s.mastery?.verdict ?? '')}</p>
+      ${s.expertSnapshot ? `<div class="insight-card"><span class="insight-label">Expert snapshot</span><p>${esc(s.expertSnapshot)}</p></div>` : ''}
+      <h3 class="section-title">Gaps</h3>
+      ${(s.gapMap || []).map(g => `<div class="gap-item ${g.status}"><strong>${esc(g.topic)}</strong> — ${g.status}</div>`).join('')}
+      <p style="margin-top:1.5rem;font-size:.8rem;color:var(--muted)">Shared via Feynman Gap Finder</p>
+    `;
+
+    function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  </script>
+</body>
+</html>
