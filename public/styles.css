@@ -191,6 +191,17 @@ h1 {
   color: var(--muted);
 }
 
+.extract-preview {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ai);
+  font-style: italic;
+}
+
+.explain-pdf-btn {
+  margin: 0.35rem 0 1rem;
+}
+
 .live-score {
   flex: 1;
   min-width: 140px;
@@ -265,6 +276,20 @@ h1 {
   align-items: flex-end;
   gap: 0.75rem;
   margin-bottom: 0.5rem;
+}
+
+.hero-room-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.hero-room-link a {
+  color: var(--ai);
+  text-decoration: none;
+}
+
+.hero-room-link a:hover {
+  color: var(--accent);
 }
 
 .hero-steps {
@@ -568,7 +593,27 @@ input:focus, textarea:focus {
   margin-bottom: 1rem;
 }
 
-.insight-card.coach { border-left: 3px solid var(--ai); }
+.insight-card.recurring {
+  border-left: 3px solid var(--amber);
+  background: linear-gradient(90deg, var(--amber-bg), var(--surface-2) 50%);
+}
+
+.recurring-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.recurring-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
 
 .insight-label {
   display: block;

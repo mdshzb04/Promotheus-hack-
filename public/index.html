@@ -7,8 +7,9 @@
   <title>Feynman Gap Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="premium.css" />
 </head>
 <body>
   <div class="mesh-bg" aria-hidden="true"></div>
@@ -16,33 +17,39 @@
 
   <div class="app">
     <header class="hero">
-      <div class="hero-badge">Feynman Technique × AI</div>
       <h1>Feynman Gap Finder</h1>
-      <p class="tagline">Explain it simply. AI finds exactly where your understanding breaks.</p>
-      <p class="feynman-quote">"If you can't explain it simply, you don't understand it well enough." — Feynman Technique</p>
-      <div class="hero-steps">
-        <span><strong>1</strong> Explain</span>
-        <span class="step-arrow">→</span>
-        <span><strong>2</strong> Get pinpointed "but why?"</span>
-        <span class="step-arrow">→</span>
-        <span><strong>3</strong> Gap map + micro-lessons</span>
+      <p class="tagline">Find where your understanding breaks.</p>
+      <p class="hero-caption">Explain it simply — that's the whole method.</p>
+      <div class="hero-steps-quiet" aria-label="Explain, pinpoint gaps, close them">
+        <span class="step-dot" title="Explain"></span>
+        <span class="step-line" aria-hidden="true"></span>
+        <span class="step-dot" title="Pinpoint gaps"></span>
+        <span class="step-line" aria-hidden="true"></span>
+        <span class="step-dot" title="Close gaps"></span>
       </div>
+      <p class="hero-room-link"><a href="/room">Study Room</a></p>
     </header>
 
     <section id="setup-panel" class="panel glass">
       <div class="input-tabs">
         <button type="button" class="tab active" data-tab="explain">Explain a topic</button>
-        <button type="button" class="tab" data-tab="notes">From my notes</button>
+        <button type="button" class="tab" data-tab="notes">From notes / PDF</button>
       </div>
 
       <div id="tab-explain" class="tab-panel">
         <label for="topic">Topic</label>
-        <input id="topic" type="text" placeholder="What are you trying to explain?" autocomplete="off" />
+        <div class="input-with-actions">
+          <input id="topic" type="text" placeholder="What are you trying to explain?" autocomplete="off" />
+          <label class="icon-btn" title="Upload PDF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            <input id="explain-pdf-file" type="file" accept=".pdf,application/pdf" hidden />
+          </label>
+        </div>
 
         <div class="field-header">
-          <label for="explanation">Your explanation <span class="hint">(2–4 sentences, your own words)</span></label>
-          <button id="voice-explain-btn" class="btn icon" type="button" title="Speak your explanation" aria-label="Voice input">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <label for="explanation">Your explanation <span class="hint">(2–4 sentences)</span></label>
+          <button id="voice-explain-btn" class="icon-btn" type="button" title="Speak your explanation" aria-label="Voice input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
         </div>
         <textarea id="explanation" rows="5" placeholder="Explain the topic as if teaching a curious friend…"></textarea>
@@ -52,23 +59,28 @@
         <label for="notes-input">Paste or upload study notes</label>
         <textarea id="notes-input" rows="6" placeholder="Paste a paragraph from your textbook, slides, or lecture notes…"></textarea>
         <div class="notes-actions">
-          <label class="btn ghost file-btn">
-            Upload .txt
+          <label class="icon-btn" title="Upload .txt">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
             <input id="notes-file" type="file" accept=".txt,text/plain" hidden />
           </label>
-          <button id="extract-btn" class="btn primary" type="button">Extract topic</button>
+          <label class="icon-btn" title="Upload PDF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            <input id="pdf-file" type="file" accept=".pdf,application/pdf" hidden />
+          </label>
+          <button id="extract-btn" class="btn ghost sm" type="button">Extract topic</button>
         </div>
         <div id="extract-result" class="extract-result hidden">
           <span class="extract-label">We'll test you on:</span>
           <strong id="extract-topic"></strong>
           <p id="extract-summary" class="extract-summary"></p>
+          <p id="extract-preview" class="extract-preview hidden"></p>
         </div>
         <label for="notes-explanation">Now explain it in your own words</label>
         <textarea id="notes-explanation" class="recall-field" rows="4" placeholder="Without looking at the notes — explain what you understood…"></textarea>
       </div>
 
       <div class="actions">
-        <button id="start-btn" class="btn primary glow">Start gap hunt</button>
+        <button id="start-btn" class="btn btn-main">Start gap hunt</button>
         <button id="demo-btn" class="btn ghost" type="button">Load demo</button>
       </div>
     </section>
@@ -97,11 +109,11 @@
         <div class="field-header">
           <label for="answer">Your answer</label>
           <div class="answer-tools">
-            <button id="tts-toggle" class="btn icon" type="button" title="Voice readout on" aria-label="Toggle AI voice">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <button id="tts-toggle" class="icon-btn" type="button" title="Voice readout on" aria-label="Toggle AI voice">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
             </button>
-            <button id="voice-answer-btn" class="btn icon" type="button" title="Speak your answer" aria-label="Voice answer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <button id="voice-answer-btn" class="icon-btn" type="button" title="Speak your answer" aria-label="Voice answer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             </button>
           </div>
         </div>
@@ -127,6 +139,12 @@
           <p id="score-verdict" class="verdict"></p>
           <div id="score-stats" class="score-stats"></div>
         </div>
+      </div>
+
+      <div id="recurring-card" class="insight-card recurring hidden">
+        <span class="insight-label">Your recurring pattern</span>
+        <p id="recurring-text"></p>
+        <div id="recurring-tags" class="recurring-tags"></div>
       </div>
 
       <div id="expert-card" class="insight-card hidden">

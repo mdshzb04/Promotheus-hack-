@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Room — Feynman Gap Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/premium.css" />
+  <link rel="stylesheet" href="/room.css" />
+</head>
+<body>
+  <div class="mesh-bg" aria-hidden="true"></div>
+
+  <div class="app room-app">
+    <header class="hero room-hero">
+      <a href="/app" class="room-back">← Gap Finder</a>
+      <div class="hero-badge">Multiplayer</div>
+      <h1>Study Room</h1>
+      <p class="tagline">Chat, share screenshots, compare gap maps live.</p>
+    </header>
+
+    <section id="join-panel" class="panel glass">
+      <label for="room-code">Room code</label>
+      <div class="room-code-row">
+        <input id="room-code" type="text" placeholder="ABC123" autocomplete="off" maxlength="8" />
+        <button id="create-room-btn" class="btn ghost" type="button">New room</button>
+      </div>
+      <label for="display-name">Your name</label>
+      <input id="display-name" type="text" placeholder="How others see you" autocomplete="nickname" maxlength="32" />
+      <button id="join-room-btn" class="btn primary glow">Join room</button>
+      <p id="join-error" class="room-error hidden"></p>
+    </section>
+
+    <section id="room-panel" class="hidden">
+      <div class="room-toolbar panel glass">
+        <div class="room-code-pill">
+          <span class="room-code-pill-label">Room</span>
+          <span id="active-room-code" class="room-code-pill-value"></span>
+          <span class="room-code-pill-divider" aria-hidden="true"></span>
+          <button id="copy-code-btn" class="room-code-pill-copy" type="button">Copy code</button>
+        </div>
+        <a id="gap-hunt-link" href="/app" class="btn btn-accent sm">Start gap hunt</a>
+      </div>
+
+      <div id="room-document" class="room-document panel glass hidden"></div>
+
+      <div class="room-grid">
+        <aside class="room-sidebar">
+          <div class="panel glass presence-panel">
+            <h2 class="room-section-title">In the room</h2>
+            <ul id="presence-list" class="presence-list"></ul>
+          </div>
+        </aside>
+
+        <main class="room-main">
+          <div class="panel glass room-chat-panel">
+            <header class="room-chat-header">
+              <h2 class="room-section-title">Chat</h2>
+            </header>
+
+            <div class="room-chat-body">
+              <div id="room-chat" class="room-chat" aria-live="polite"></div>
+            </div>
+
+            <footer class="room-chat-composer">
+              <p id="room-upload-status" class="room-upload-status hidden" role="status"></p>
+              <form id="chat-form" class="room-chat-form">
+                <div class="composer-row">
+                  <div class="attach-wrap">
+                    <button type="button" id="attach-btn" class="attach-btn" aria-label="Attach file" aria-expanded="false" aria-haspopup="menu">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                    <div id="attach-menu" class="attach-menu hidden" role="menu">
+                      <button type="button" class="attach-menu-item" data-attach="image" role="menuitem">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                        Image
+                      </button>
+                      <button type="button" class="attach-menu-item" data-attach="pdf" role="menuitem">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                        Document (PDF)
+                      </button>
+                    </div>
+                  </div>
+                  <input id="image-input" type="file" accept="image/*" hidden />
+                  <input id="pdf-input" type="file" accept=".pdf,application/pdf" hidden />
+                  <input id="chat-input" type="text" class="chat-input" placeholder="Message the room…" autocomplete="off" maxlength="2000" />
+                  <button type="submit" class="send-btn">Send</button>
+                </div>
+              </form>
+            </footer>
+          </div>
+
+          <div class="panel glass gap-maps-panel">
+            <h2 class="room-section-title">Gap maps</h2>
+            <p class="subtitle">Run a gap hunt, then maps sync here automatically.</p>
+            <div id="gap-dashboard" class="gap-dashboard"></div>
+          </div>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/room.js"></script>
+</body>
+</html>

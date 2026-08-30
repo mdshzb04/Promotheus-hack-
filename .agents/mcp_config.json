@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "forge": {
+      "command": "/home/mohammed-shazeb/.local/share/uv/tools/forgeoptimizer/bin/forge",
+      "args": [
+        "mcp"
+      ],
+      "type": "stdio"
+    }
+  }
+}

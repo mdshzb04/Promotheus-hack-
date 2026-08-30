@@ -23,7 +23,10 @@ const extractBtn = $('#extract-btn');
 const extractResult = $('#extract-result');
 const extractTopic = $('#extract-topic');
 const extractSummary = $('#extract-summary');
+const extractPreview = $('#extract-preview');
 const notesFile = $('#notes-file');
+const pdfFile = $('#pdf-file');
+const explainPdfFile = $('#explain-pdf-file');
 const startBtn = $('#start-btn');
 const demoBtn = $('#demo-btn');
 const setupPanel = $('#setup-panel');
@@ -42,6 +45,9 @@ const journeyFinal = $('#journey-final');
 const compareCard = $('#compare-card');
 const compareYours = $('#compare-yours');
 const compareExpert = $('#compare-expert');
+const recurringCard = $('#recurring-card');
+const recurringText = $('#recurring-text');
+const recurringTags = $('#recurring-tags');
 const flashcardsPanel = $('#flashcards-panel');
 const flashcardsGrid = $('#flashcards-grid');
 const shareLinkBtn = $('#share-link-btn');
@@ -98,6 +104,19 @@ notesFile.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   notesInput.value = await file.text();
+  e.target.value = '';
+});
+
+pdfFile.addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (file) uploadPdf(file, { fillNotes: true });
+});
+
+explainPdfFile.addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (file) uploadPdf(file, { fillTopic: true });
 });
 
 extractBtn.addEventListener('click', extractNotes);
@@ -119,6 +138,8 @@ function setBusy(on) {
   demoBtn.disabled = on;
   proveItBtn.disabled = on;
   extractBtn.disabled = on;
+  pdfFile.disabled = on;
+  explainPdfFile.disabled = on;
 }
 
 function updateLiveScore(mastery) {
@@ -213,6 +234,23 @@ function renderGapMap(session) {
   });
 }
 
+function pushGapToRoom(session) {
+  const roomCode = localStorage.getItem('studyRoomCode');
+  const memberToken = localStorage.getItem('studyRoomToken');
+  if (!roomCode || !memberToken || !session?.gapMap) return;
+  fetch(`/api/room/${roomCode}/gap-sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      memberToken,
+      topic: session.topic,
+      gapMap: session.gapMap,
+      mastery: session.mastery || session.liveMastery,
+      sessionId: session.id,
+    }),
+  }).catch(() => {});
+}
+
 function updateSessionUI(session, analysis) {
   updateLiveScore(session.liveMastery);
   if (analysis) collectedAnalyses.push(analysis);
@@ -221,6 +259,7 @@ function updateSessionUI(session, analysis) {
     journeyLive.classList.remove('hidden');
     renderJourney(journeyLive, session.scoreHistory);
   }
+  pushGapToRoom(session);
 }
 
 function renderResults(session) {
@@ -264,6 +303,29 @@ function renderResults(session) {
   }
 
   if (m.score >= 85) launchConfetti(confettiLayer);
+  loadRecurringInsights();
+  pushGapToRoom(session);
+}
+
+async function loadRecurringInsights() {
+  try {
+    const res = await fetch('/api/insights');
+    const data = await res.json();
+    if (!data.showInsights || !data.message) {
+      recurringCard.classList.add('hidden');
+      return;
+    }
+    recurringCard.classList.remove('hidden');
+    recurringText.textContent = data.message;
+    recurringTags.innerHTML = (data.patterns || [])
+      .map(
+        (p) =>
+          `<span class="recurring-tag">${escapeHtml(p.label)} · ${p.sessionCount}/${data.sessionsAnalyzed}</span>`
+      )
+      .join('');
+  } catch {
+    recurringCard.classList.add('hidden');
+  }
 }
 
 async function api(path, body) {
@@ -277,6 +339,67 @@ async function api(path, body) {
   return data;
 }
 
+function showExtractResult(data) {
+  extractedTopic = data.topic;
+  extractTopic.textContent = data.topic;
+  extractSummary.textContent = data.summary;
+  if (data.previewQuestion) {
+    extractPreview.textContent = `First question preview: ${data.previewQuestion}`;
+    extractPreview.classList.remove('hidden');
+  } else {
+    extractPreview.classList.add('hidden');
+    extractPreview.textContent = '';
+  }
+  extractResult.classList.remove('hidden');
+}
+
+async function uploadPdf(file, { fillNotes = false, fillTopic = false } = {}) {
+  if (file.size > 50 * 1024 * 1024) {
+    showStatus('File too large — max 50MB', 'error');
+    return;
+  }
+  if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+    showStatus('PDF only — upload a .pdf file.', 'error');
+    return;
+  }
+
+  setBusy(true);
+  showStatus('Extracting text…');
+  const analyzeTimer = setTimeout(() => {
+    if (busy) showStatus('Analyzing document…');
+  }, 900);
+
+  const form = new FormData();
+  form.append('pdf', file);
+
+  try {
+    const res = await fetch('/api/extract-pdf', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'PDF extraction failed');
+
+    if (fillNotes) {
+      document.querySelector('.tab[data-tab="notes"]').click();
+      showExtractResult(data);
+    }
+    if (fillTopic) {
+      document.querySelector('.tab[data-tab="explain"]').click();
+      topicInput.value = data.topic;
+      extractedTopic = data.topic;
+      if (data.previewQuestion) {
+        showStatus(`Topic ready — preview: "${data.previewQuestion}"`, 'success');
+        setTimeout(hideStatus, 4000);
+        return;
+      }
+    }
+    hideStatus();
+  } catch (err) {
+    showStatus(err.message, 'error');
+  } finally {
+    clearTimeout(analyzeTimer);
+    setBusy(false);
+  }
+}
+
 async function extractNotes() {
   const notes = notesInput.value.trim();
   if (notes.length < 40) {
@@ -287,10 +410,7 @@ async function extractNotes() {
   showStatus('Extracting topic from your notes…');
   try {
     const data = await api('/api/extract-notes', { notes });
-    extractedTopic = data.topic;
-    extractTopic.textContent = data.topic;
-    extractSummary.textContent = data.summary;
-    extractResult.classList.remove('hidden');
+    showExtractResult(data);
     hideStatus();
   } catch (err) {
     showStatus(err.message, 'error');
@@ -473,6 +593,8 @@ function restart() {
   expertCard.classList.add('hidden');
   coachCard.classList.add('hidden');
   compareCard.classList.add('hidden');
+  recurringCard.classList.add('hidden');
+  recurringTags.innerHTML = '';
   flashcardsPanel.classList.add('hidden');
   flashcardsGrid.innerHTML = '';
   proveItPanel.classList.add('hidden');
@@ -483,6 +605,8 @@ function restart() {
   heatmapPanel.classList.add('hidden');
   journeyLive.classList.add('hidden');
   extractResult.classList.add('hidden');
+  extractPreview.classList.add('hidden');
+  extractPreview.textContent = '';
   notesInput.classList.remove('blurred');
   hideStatus();
 }
