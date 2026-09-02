@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "forge": {
-      "command": "/home/mohammed-shazeb/.local/share/uv/tools/forgeoptimizer/bin/forge",
+      "command": "forge",
       "args": [
         "mcp"
       ],

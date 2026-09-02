@@ -50,4 +50,14 @@ Open **http://localhost:3000** — demo pre-loaded → **Start gap hunt**.
 | `MAX_ROUNDS` | `3` |
 | `OPENAI_MODEL` | `gpt-4o-mini` |
 | `ANTHROPIC_MODEL` | `claude-sonnet-4-20250514` |
+
+### Agent MCP (optional)
+
+Forge MCP configs (`.mcp.json`, `.agents/mcp_config.json`) call the `forge` CLI on your `PATH`. Install via uv so the binary resolves on any machine:
+
+```bash
+uv tool install forgeoptimizer
+# confirm: command -v forge
+```
+
 # Promotheus-hack-
