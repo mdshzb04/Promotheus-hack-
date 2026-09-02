@@ -11,6 +11,7 @@ export function renderFlashcards(container, gapMap, microLessons, analogies = []
   for (const g of shaky) {
     const card = document.createElement('div');
     card.className = 'flashcard';
+    card.dataset.topic = g.topic;
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', `Flashcard: ${g.topic}. Click to flip.`);

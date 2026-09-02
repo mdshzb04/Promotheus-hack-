@@ -578,12 +578,25 @@ input:focus, textarea:focus {
 
 .score-stats {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.4rem;
   font-size: 0.8rem;
   color: var(--muted);
 }
 
-.score-stats span strong { color: var(--text); }
+.stats-total { font-size: 0.92rem; color: var(--text); }
+.stats-total strong { font-size: 1.05rem; }
+
+.stats-breakdown {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stats-breakdown span strong { color: inherit; }
+.stat-solid { color: var(--green); }
+.stat-shaky { color: var(--amber); }
+.stat-unexplored { color: var(--muted); }
 
 .insight-card {
   background: var(--surface-2);
@@ -657,10 +670,18 @@ input:focus, textarea:focus {
 
 .graph-edge.shaky { stroke: rgba(251, 191, 36, 0.45); stroke-dasharray: 4 4; }
 .graph-edge.solid { stroke: rgba(74, 222, 128, 0.35); }
-.graph-edge.ring { stroke: rgba(255, 255, 255, 0.06); stroke-width: 1; }
+.graph-edge.gap { stroke: rgba(251, 191, 36, 0.3); stroke-dasharray: 2 4; }
 
 .graph-node-group {
   animation: nodeIn 0.5s ease backwards;
+  cursor: pointer;
+  outline: none;
+}
+
+.graph-node-group:hover .graph-node,
+.graph-node-group:focus-visible .graph-node,
+.graph-node-group.selected .graph-node {
+  stroke-width: 3;
 }
 
 @keyframes nodeIn {
@@ -669,8 +690,15 @@ input:focus, textarea:focus {
 }
 
 .graph-node {
-  fill: rgba(255, 255, 255, 0.08);
+  fill: rgba(148, 163, 184, 0.1);
+  stroke: rgba(148, 163, 184, 0.5);
   stroke-width: 2;
+}
+
+.graph-node.gap {
+  fill: rgba(251, 191, 36, 0.08);
+  stroke: rgba(251, 191, 36, 0.45);
+  stroke-dasharray: 3 3;
 }
 
 .graph-node.center {
@@ -694,9 +722,51 @@ input:focus, textarea:focus {
 }
 
 .graph-label {
-  fill: var(--muted);
+  fill: var(--text);
   font-size: 10px;
   text-anchor: middle;
+  font-family: var(--font);
+  pointer-events: none;
+}
+
+.graph-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.85rem;
+}
+
+.graph-detail-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: var(--muted);
+}
+
+.graph-detail-badge.solid { color: var(--green); border-color: var(--green); }
+.graph-detail-badge.shaky,
+.graph-detail-badge.gap { color: var(--amber); border-color: var(--amber); }
+.graph-detail-badge.center { color: var(--accent-dim); border-color: var(--accent-dim); }
+
+.graph-detail-name { color: var(--text); }
+.graph-detail-type { color: var(--muted); font-size: 0.78rem; }
+
+.graph-detail-link {
+  background: none;
+  border: none;
+  color: var(--accent-dim);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0;
+  text-decoration: underline;
   font-family: var(--font);
 }
 

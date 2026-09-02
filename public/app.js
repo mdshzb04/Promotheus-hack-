@@ -50,6 +50,7 @@ const recurringText = $('#recurring-text');
 const recurringTags = $('#recurring-tags');
 const flashcardsPanel = $('#flashcards-panel');
 const flashcardsGrid = $('#flashcards-grid');
+const postRoomBtn = $('#post-room-btn');
 const shareLinkBtn = $('#share-link-btn');
 const answerInput = $('#answer');
 const submitAnswerBtn = $('#submit-answer-btn');
@@ -81,6 +82,7 @@ let activeTab = 'explain';
 let extractedTopic = null;
 let initialExplanation = '';
 let collectedAnalyses = [];
+let lastGapSession = null;
 
 createVoiceInput($('#voice-explain-btn'), explanationInput);
 createVoiceInput($('#voice-answer-btn'), answerInput);
@@ -234,11 +236,18 @@ function renderGapMap(session) {
   });
 }
 
-function pushGapToRoom(session) {
+function pushGapToRoom(session, { announce = false } = {}) {
   const roomCode = localStorage.getItem('studyRoomCode');
   const memberToken = localStorage.getItem('studyRoomToken');
-  if (!roomCode || !memberToken || !session?.gapMap) return;
-  fetch(`/api/room/${roomCode}/gap-sync`, {
+  if (!roomCode || !memberToken || !session?.gapMap) {
+    if (announce) {
+      return Promise.reject(new Error(
+        !session?.gapMap ? 'Finish a gap hunt first.' : 'Join a study room first, then post your map.'
+      ));
+    }
+    return;
+  }
+  const req = fetch(`/api/room/${roomCode}/gap-sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -247,11 +256,38 @@ function pushGapToRoom(session) {
       gapMap: session.gapMap,
       mastery: session.mastery || session.liveMastery,
       sessionId: session.id,
+      announce,
     }),
-  }).catch(() => {});
+  });
+  if (!announce) {
+    req.catch(() => {});
+    return;
+  }
+  return req.then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Could not post to room.');
+  });
+}
+
+async function postMapToRoom() {
+  if (!lastGapSession?.gapMap) {
+    showStatus('Finish a gap hunt first.', 'error');
+    return;
+  }
+  postRoomBtn.disabled = true;
+  try {
+    await pushGapToRoom(lastGapSession, { announce: true });
+    showStatus('Posted to room chat.', 'success');
+    setTimeout(hideStatus, 2000);
+  } catch (err) {
+    showStatus(err.message, 'error');
+  } finally {
+    postRoomBtn.disabled = false;
+  }
 }
 
 function updateSessionUI(session, analysis) {
+  lastGapSession = session;
   updateLiveScore(session.liveMastery);
   if (analysis) collectedAnalyses.push(analysis);
   renderHeatmapPanel(heatmapPanel, initialExplanation, collectedAnalyses);
@@ -263,15 +299,22 @@ function updateSessionUI(session, analysis) {
 }
 
 function renderResults(session) {
+  lastGapSession = session;
   const m = session.mastery || {};
 
   scoreValue.textContent = m.score ?? '—';
   scoreGrade.textContent = m.grade ?? '';
   scoreVerdict.textContent = m.verdict ?? '';
+  const solidCount = m.solid ?? 0;
+  const shakyCount = m.shaky ?? 0;
+  const notYetCount = Math.max(0, (m.total ?? 0) - solidCount - shakyCount);
   scoreStats.innerHTML = `
-    <span><strong>${m.solid ?? 0}</strong> solid</span>
-    <span><strong>${m.shaky ?? 0}</strong> shaky</span>
-    <span><strong>${m.total ?? 0}</strong> concepts</span>
+    <div class="stats-total">Concepts reviewed: <strong>${solidCount + shakyCount + notYetCount}</strong></div>
+    <div class="stats-breakdown">
+      <span class="stat-solid">Solid: <strong>${solidCount}</strong></span>
+      <span class="stat-shaky">Shaky: <strong>${shakyCount}</strong></span>
+      <span class="stat-unexplored">Not yet covered: <strong>${notYetCount}</strong></span>
+    </div>
   `;
 
   animateScoreRing(document.querySelector('.score-ring'), m.score || 0);
@@ -289,7 +332,9 @@ function renderResults(session) {
   }
 
   renderJourney(journeyFinal, session.scoreHistory);
-  renderGapGraph(gapGraph, session.topic, session.gapMap);
+  renderGapGraph(gapGraph, session.topic, session.gapMap, {
+    getFlashcard: (topic) => flashcardsGrid.querySelector(`.flashcard[data-topic="${CSS.escape(topic)}"]`),
+  });
   renderGapMap(session);
   renderFlashcards(flashcardsGrid, session.gapMap, session.microLessons, session.analogies);
   flashcardsPanel.classList.toggle('hidden', !(session.gapMap || []).some((g) => g.status === 'shaky'));
@@ -527,12 +572,9 @@ async function submitProveIt() {
       proveItResult.className = `prove-it-result ${r.closed ? 'closed' : 'open'}`;
       proveItResult.textContent = r.feedback;
       proveItBtn.disabled = true;
-      if (data.session.mastery) {
-        scoreValue.textContent = data.session.mastery.score;
-        animateScoreRing(document.querySelector('.score-ring'), data.session.mastery.score);
-      }
       if (r.closed) launchConfetti(confettiLayer);
     }
+    if (data.session) renderResults(data.session);
     hideStatus();
   } catch (err) {
     showStatus(err.message, 'error');
@@ -579,6 +621,7 @@ function loadNotesDemo() {
 
 function restart() {
   sessionId = null;
+  lastGapSession = null;
   extractedTopic = null;
   initialExplanation = '';
   collectedAnalyses = [];
@@ -616,6 +659,7 @@ demoBtn.addEventListener('click', loadDemo);
 submitAnswerBtn.addEventListener('click', submitAnswer);
 proveItBtn.addEventListener('click', submitProveIt);
 copyReportBtn.addEventListener('click', copyReport);
+postRoomBtn.addEventListener('click', postMapToRoom);
 shareLinkBtn.addEventListener('click', shareLink);
 restartBtn.addEventListener('click', restart);
 
