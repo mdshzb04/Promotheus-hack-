@@ -1,0 +1,11 @@
+#!/bin/sh
+# Strip Cursor co-author trailers so GitHub Contributors stays just the human author.
+msg_file="$1"
+[ -f "$msg_file" ] || exit 0
+tmp=$(mktemp)
+# Drop Co-authored-by: Cursor <cursoragent@cursor.com> (any casing/spacing)
+grep -viE '^[[:space:]]*Co-authored-by:[[:space:]]*Cursor[[:space:]]*<cursoragent@cursor\.com>[[:space:]]*$' "$msg_file" > "$tmp"
+# Collapse trailing blank lines to a single newline
+awk 'NF{p=1} p' "$tmp" | awk 'BEGIN{b=0} /^$/{b=1; next} {if(b) print ""; b=0; print}' > "$msg_file"
+rm -f "$tmp"
+exit 0
