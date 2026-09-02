@@ -65,7 +65,8 @@ function layoutTree(nodes, width) {
   const subs = nodes.filter((n) => n.parent === root);
   root.x = width / 2;
   root.y = 14 + root.h / 2;
-  const subTop = root.y + root.h / 2 + 46;
+  // ~15% more vertical room so curved edges read clearly (desktop layout only)
+  const subTop = root.y + root.h / 2 + 54;
   let subBottom = subTop;
   subs.forEach((s, i) => {
     s.x = clamp((width * (i + 0.5)) / subs.length, s.w / 2 + 6, width - s.w / 2 - 6);
@@ -73,7 +74,7 @@ function layoutTree(nodes, width) {
     subBottom = Math.max(subBottom, s.y + s.h / 2);
   });
   let bottom = subBottom;
-  const gapTop = subBottom + 44;
+  const gapTop = subBottom + 52;
   for (const n of nodes) {
     if (!n.parent || n.parent === root) continue;
     n.x = clamp(n.parent.x, n.w / 2 + 6, width - n.w / 2 - 6);
@@ -137,13 +138,48 @@ function edgeEl(n, narrow) {
     const points = `${px},${n.parent.y + n.parent.h / 2} ${px},${n.y} ${n.x - n.w / 2},${n.y}`;
     return svgEl('polyline', { points, fill: 'none', class: `graph-edge ${n.status}` });
   }
-  return svgEl('line', {
-    x1: n.parent.x,
-    y1: n.parent.y + n.parent.h / 2,
-    x2: n.x,
-    y2: n.y - n.h / 2,
+  // Desktop: smooth cubic bezier (React Flow–style vertical S-curve)
+  const x1 = n.parent.x;
+  const y1 = n.parent.y + n.parent.h / 2;
+  const x2 = n.x;
+  const y2 = n.y - n.h / 2;
+  const midY = (y1 + y2) / 2;
+  return svgEl('path', {
+    d: `M ${x1} ${y1} C ${x1} ${midY} ${x2} ${midY} ${x2} ${y2}`,
+    fill: 'none',
     class: `graph-edge ${n.status}`,
   });
+}
+
+function glowDefs() {
+  const defs = svgEl('defs');
+  const glows = [
+    ['center', 'rgba(52, 211, 153, 0.55)'],
+    ['solid', 'rgba(74, 222, 128, 0.55)'],
+    ['shaky', 'rgba(251, 191, 36, 0.55)'],
+    ['gap', 'rgba(251, 191, 36, 0.4)'],
+    ['unexplored', 'rgba(148, 163, 184, 0.45)'],
+  ];
+  for (const [name, color] of glows) {
+    const filter = svgEl('filter', {
+      id: `node-glow-${name}`,
+      x: '-40%',
+      y: '-40%',
+      width: '180%',
+      height: '180%',
+    });
+    filter.appendChild(
+      svgEl('feDropShadow', {
+        dx: '0',
+        dy: '1',
+        stdDeviation: '3.5',
+        'flood-color': color,
+        'flood-opacity': '0.7',
+      })
+    );
+    defs.appendChild(filter);
+  }
+  return defs;
 }
 
 function showDetail(detail, n, opts) {
@@ -184,6 +220,7 @@ function nodeEl(n, i, svg, detail, opts) {
     'aria-label': `${n.label} — ${statusText(n.status)}`,
   });
   g.style.animationDelay = `${i * 0.06}s`;
+  const glow = ['center', 'solid', 'shaky', 'gap'].includes(n.status) ? n.status : 'unexplored';
   g.appendChild(
     svgEl('rect', {
       x: n.x - n.w / 2,
@@ -192,6 +229,7 @@ function nodeEl(n, i, svg, detail, opts) {
       height: n.h,
       rx: 9,
       class: `graph-node ${n.status}`,
+      filter: `url(#node-glow-${glow})`,
     })
   );
   const text = svgEl('text', { class: 'graph-label' });
@@ -234,6 +272,7 @@ export function renderGapGraph(container, topic, gapMap, opts = {}) {
     role: 'img',
     'aria-label': 'Knowledge graph: topic, sub-concepts, and specific gaps',
   });
+  svg.appendChild(glowDefs());
 
   const detail = document.createElement('div');
   detail.className = 'graph-detail hidden';
